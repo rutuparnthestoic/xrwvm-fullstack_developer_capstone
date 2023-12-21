@@ -109,7 +109,7 @@ def get_dealerships(request):
         url = "http://localhost:3000/dealerships/get"
         dealerships = get_dealers_from_cf(url)
         context["dealership_list"] = dealerships
-       
+        
         return render(request, 'djangoapp/index.html', context)
 
 
