@@ -14,8 +14,8 @@ class CarMake(models.Model):
 # <HINT> Create a Car Model model `class CarModel(models.Model):`:
 
 class CarModel(models.Model):
-    make = models.ForeignKey(CarMake, null=True, on_delete = models.CASCADE)
-
+    # make = models.ForeignKey(CarMake, null=True, on_delete = models.CASCADE)
+    car_make = models.ForeignKey(CarMake, null=True, on_delete=models.CASCADE)
     dealer_id = models.IntegerField()
     name = models.CharField(max_length=255)
     SEDAN = "Sedan"
@@ -30,27 +30,36 @@ class CarModel(models.Model):
     year = models.DateField()
 
     def __str__(self):
-        return f"{self.make} {self.name} ({self.year})"
+        return f"{self.car_make} {self.name} ({self.year})"
 
         
 # <HINT> Create a plain Python class `CarDealer` to hold dealer data
 
 # All fields are from dealerships document in cloudant
 class CarDealer:
-    def __init__(self, id, city, state, st, address, zip, lat, long, short_name, full_name):
-        self.id = id
-        self.city = city
-        self.state = state
-        self.st = st
+
+    def __init__(self, address, city, full_name, id, lat, long, short_name, st, zip):
+        # Dealer address
         self.address = address
-        self.zip = zip
-        self.lat = lat
-        self.long = long
-        self.short_name = short_name
+        # Dealer city
+        self.city = city
+        # Dealer Full Name
         self.full_name = full_name
+        # Dealer id
+        self.id = id
+        # Location lat
+        self.lat = lat
+        # Location long
+        self.long = long
+        # Dealer short name
+        self.short_name = short_name
+        # Dealer state
+        self.st = st
+        # Dealer zip
+        self.zip = zip
 
     def __str__(self):
-        return self.full_name + self.state
+        return "Dealer name: " + self.full_name
 
 
 # <HINT> Create a plain Python class `DealerReview` to hold review data

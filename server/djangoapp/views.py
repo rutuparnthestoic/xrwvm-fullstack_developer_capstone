@@ -10,6 +10,12 @@ from datetime import datetime
 import logging
 import json
 
+from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request
+
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+
+from .models import CarModel, CarDealer
+
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -94,17 +100,102 @@ def registration_request(request):
             return render(request, 'djangoapp/registration.html', context)
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
+# make request to node.js server: get-dealerships.js
 def get_dealerships(request):
-    context = {}
     if request.method == "GET":
+        context = {}
+        # https://devshahfahad-8000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/djangoapp
+        # url = "https://devshahfahad-3000.theiadockernext-0-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai/dealerships/get"
+        url = "http://localhost:3000/dealerships/get"
+        dealerships = get_dealers_from_cf(url)
+        context["dealership_list"] = dealerships
+       
         return render(request, 'djangoapp/index.html', context)
 
 
 # Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
+# make request to flask server: reviews.py
+def get_dealer_details(request, dealer_id):
+    print(request, dealer_id)
+    if request.method == "GET":
+        url = "http://127.0.0.1:5000/api/get_reviews"
+        # Get dealers from the URL
+        reviews = get_dealer_reviews_from_cf(url, dealerId=dealer_id)
+        # Concat all dealer's short name
+        dealer_names = " ".join([dealer.name for dealer in reviews])
+        # Return a list of dealer short name
+        print(reviews)
+        return render(
+            request,
+            "djangoapp/dealer_details.html",
+            {"reviews": reviews, "dealer_id": dealer_id},
+        )
 
 # Create a `add_review` view to submit a review
-# def add_review(request, dealer_id):
-# ...
+@csrf_exempt
+def add_review(request, dealer_id):
+    # User must be logged in before posting a review
+    if request.user.is_authenticated or True:
+        # GET request renders the page with the form for filling out a review
+        if request.method == "GET":
+            # url = f"http://localhost:3000/dealerships/get?dealerId={dealer_id}"
+            url = "http://localhost:3000/dealerships/get"
+            # Get dealer details from the API
+            context = {
+                "cars": CarModel.objects.all(),
+                "dealer": get_dealer_by_id_from_cf(url, dealer_id),
+            }
+            # print("CONTEXT: ", context)
+            return render(request, 'djangoapp/add_review.html', context)
+        
+        # POST request posts the content in the review submission form to the Cloudant DB using the post_review Cloud Function
+        if request.method == "POST":
+            # Get data from request
+            review_post_form_data = request.POST # Loads data only from form
+            review_post_json_data = json.loads(request.body) # Loads json data from post request
+            
+            # Store data to review dictionary one by one
+            review = {}
+            review["id"] = review_post_json_data.get("id")
+            review["name"] = review_post_json_data.get("name")
+            review["dealership"] = dealer_id
+            review["review"] = review_post_json_data.get("review")
+            review["purchase"] = review_post_json_data.get("purchase", False)  # Default to False if not present
+
+            if review["purchase"]:
+                purchase_date_str = review_post_json_data.get("purchase_date")
+                purchase_date_str = review_post_json_data.get("purchase_date")
+                if purchase_date_str:
+                    purchase_date = datetime.strptime(purchase_date_str, "%m/%d/%Y")
+                    review["purchase_date"] = purchase_date.strftime("%m/%d/%Y")
+                else:
+                    review["purchase_date"] = None
+            else:
+                review["purchase_date"] = None
+
+            car = get_object_or_404(CarModel, pk=review["id"])
+            review["car_make"] = car.car_make.name
+            review["car_model"] = car.name
+            review["car_year"] = car.year.strftime("%Y")
+            
+            # make reques to this url: flask server: reviews.py
+            url = "http://127.0.0.1:5000/api/post_review"  # API Cloud Function route
+            json_payload = {"review": review}  # Create a JSON payload that contains the review data
+            
+            # Performing a POST request with the review
+            result = post_request(url, json_payload, dealerId=dealer_id)
+            if int(result.status_code) == 200:
+                print("Review posted successfully.")
+            else:
+                print("Review posting filed: ", int(result.status_code))
+
+
+            # After posting the review the user is redirected back to the dealer details page
+            return redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+            
+
+    # If user isn't logged in, redirect to login page
+    print("User must be authenticated before posting a review. Please log in.")
+    return redirect("/djangoapp/login")
+
 
