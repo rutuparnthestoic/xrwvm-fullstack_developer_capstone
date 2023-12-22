@@ -66,6 +66,16 @@ def post_review():
             jsonify(400, {"description":f'Missing required field: {field}'})
 
     # Save the review data as a new document in the Cloudant database
+    # Temprory solution for case: If direct submission of reveiw from flask server.
+    print(review_data)
+    temp = {}
+    if(type(review_data) == type(temp)):
+        db.create_document(review_data)
+        return jsonify({"message": "Review posted successfully"}), 201
+        
+        
+    # Review submission via post request from django server
+    print(review_data["review"])
     db.create_document(review_data["review"])
     return jsonify({"message": "Review posted successfully"}), 201
 
