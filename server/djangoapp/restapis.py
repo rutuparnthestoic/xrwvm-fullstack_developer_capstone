@@ -119,7 +119,6 @@ def get_dealer_reviews_from_cf(url, **kwargs):
             
             # Creating a review object
             # Use .get() Method: Use .get(key, default_value) to access dictionary values gracefully, avoiding KeyError without the need for a try...except block.
-            
             dealer_review = DealerReview(  # Create object initially
                 id=single_review["id"],
                 name=single_review["name"],

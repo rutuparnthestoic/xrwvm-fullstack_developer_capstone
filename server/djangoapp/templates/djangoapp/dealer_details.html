@@ -37,7 +37,7 @@
             <a
               class="btn btn-link"
               href="{% url 'djangoapp:add_review' dealer_id %}"
-              >Add Review</a
+              >Add Review {{dealer_id}}</a
             >
             {% endif %}
           </li>
@@ -76,6 +76,7 @@
       </div>
     </nav>
 
+    {% if reviews %}
     <!-- Add reviews as cards -->
     <div class="card-columns">
       {% for review in reviews %}
@@ -99,5 +100,8 @@
       </div>
       {% endfor %}
     </div>
+    {% else %}
+    <h1 class="text-center">No, reviews are available.</h1>
+    {% endif %}
   </body>
 </html>
