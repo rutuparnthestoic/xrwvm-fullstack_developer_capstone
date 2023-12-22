@@ -52,7 +52,7 @@ def get_dealers_from_cf(url, **kwargs):
     # Call get_request with a URL parameter
     json_result = get_request(url)
     if json_result:
-        print(json_result)
+        print("JSON RESULT: ", json_result)
         # Get the row list in JSON as dealers
         # dealers = json_result[0]
         #
@@ -104,26 +104,41 @@ def get_dealer_by_id_from_cf(url, dealer_id):
 # Create a get_dealer_reviews_from_cf method to get reviews by dealer id from a cloud function
 def get_dealer_reviews_from_cf(url, **kwargs):
     results = []
-    json_result = get_request(url, id=kwargs["dealerId"])
+    json_result = get_request(url)
     if json_result:
         reviews = json_result
-        print(reviews)
-        for review in reviews:
-            dealer_review = DealerReview(
-                dealership=review["dealership"],
-                name=review["name"],
-                purchase=review["purchase"],
-                review=review["review"],
-                purchase_date=review["purchase_date"],
-                car_make=review["car_make"],
-                car_model=review["car_model"],
-                car_year=review["car_year"],
+        # print("Revs________________")
+        # print(reviews)
+        # print("________________")
+        
+        for single_review in reviews:
+            # ... (print statements)
+            # print("SRevs________________")
+            # print(single_review)
+            # print("________________")
+            
+            # Creating a review object
+            # Use .get() Method: Use .get(key, default_value) to access dictionary values gracefully, avoiding KeyError without the need for a try...except block.
+            
+            dealer_review = DealerReview(  # Create object initially
+                id=single_review["id"],
+                name=single_review["name"],
+                dealership=single_review["dealership"],
+                review=single_review["review"],
+                purchase=single_review.get("purchase"),
+                purchase_date=single_review.get("purchase_date"),
+                car_make=single_review.get("car_make"),
+                car_model=single_review.get("car_model"),
+                car_year=single_review.get("car_year"),
                 sentiment="",
-                id=review["id"],
             )
+
+            # Analysing the sentiment of the review object's review text and saving it to the object attribute "sentiment"
             dealer_review.sentiment = analyze_review_sentiments(dealer_review.review)
+
+            # Saving the review object to the list of results
             results.append(dealer_review)
-            print(dealer_review)
+            print("DEALER REVIEW:", dealer_review)
     return results
 
 

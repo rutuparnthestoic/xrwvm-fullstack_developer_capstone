@@ -118,18 +118,26 @@ def get_dealerships(request):
 def get_dealer_details(request, dealer_id):
     print(request, dealer_id)
     if request.method == "GET":
-        url = "http://127.0.0.1:5000/api/get_reviews"
+        context = {}
+        url = f"http://127.0.0.1:5000/api/get_reviews?id={dealer_id}"
         # Get dealers from the URL
-        reviews = get_dealer_reviews_from_cf(url, dealerId=dealer_id)
+        reviews = get_dealer_reviews_from_cf(url)
         # Concat all dealer's short name
         dealer_names = " ".join([dealer.name for dealer in reviews])
         # Return a list of dealer short name
+        print("_______________")
         print(reviews)
-        return render(
-            request,
-            "djangoapp/dealer_details.html",
-            {"reviews": reviews, "dealer_id": dealer_id},
-        )
+        print("_______________")
+        # return render(
+        #     request,
+        #     "djangoapp/dealer_details.html",
+        #     {"reviews": reviews, "dealer_id": dealer_id},
+        # )
+        context = {"reviews" :reviews, "dealer_id": dealer_id}
+        print("Context:______________")
+        print(reviews)
+        print("________________________")
+        return render(request, 'djangoapp/dealer_details.html', context)
 
 # Create a `add_review` view to submit a review
 @csrf_exempt
