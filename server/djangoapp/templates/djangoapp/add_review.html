@@ -17,7 +17,6 @@
   </head>
   <body>
     <!--Add review form here -->
-{% endcomment %}
 <h1>Add Review for : {{ dealer.full_name }}</h1>
 <hr class="dropdown-divider">
     <form action="{% url 'djangoapp:add_review' dealer.id %}" method="post">
